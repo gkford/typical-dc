@@ -2,3 +2,5 @@
 .env.local
 *.local
 node_modules
+!.env.local.template
+!.env.template
