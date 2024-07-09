@@ -2,6 +2,9 @@
 
 # Future use script
 
+# Install aider-chat using pip
+pip install aider-chat
+
 # Fetch and add the .aider.conf.yml to the root of the repo
 curl -o .aider.conf.yml https://raw.githubusercontent.com/paul-gauthier/aider/main/aider/website/assets/sample.aider.conf.yml
 
@@ -18,9 +21,6 @@ fi
 if ! grep -qx "node_modules" .gitignore; then
     echo "node_modules" >> .gitignore
 fi
-
-# Install aider-chat using pip
-pip install aider-chat
 
 # Install project dependencies with Yarn
 yarn install
