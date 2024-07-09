@@ -9,10 +9,10 @@
 # Main:
 
 ## Specify the OpenAI API key
-#openai-api-key:
+#openai-api-key: THIS FILE IS PUBLIC - DO NOT INCLUDE API KEYS. USE `.env.local` INSTEAD
 
 ## Specify the Anthropic API key
-#anthropic-api-key:
+#anthropic-api-key: THIS FILE IS PUBLIC - DO NOT INCLUDE API KEYS. USE `.env.local` INSTEAD
 
 ## Specify the model to use for the main chat
 #model:
