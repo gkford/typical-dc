@@ -1,5 +1,4 @@
 *.aider
-.aider.conf.yml
 *.env.local
 .env.local
 node_modules
