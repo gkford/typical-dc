@@ -21,9 +21,9 @@ Add the Piknik extension to your `.devcontainer.json`:
 },
 ```
 
-### Confirm Automated Setup
+### Initial Setup in postCreate.sh
 
-Check your existing `.devcontainer/postCreate.sh` script to ensure it includes these required Piknik-related commands. Your postCreate script likely already has most or all of these, but verify that it handles:
+Your `.devcontainer/postCreate.sh` script should include these Piknik-related commands:
 
 ```bash
 # Piknik installation
@@ -33,76 +33,67 @@ sudo mv linux-x86_64/piknik /usr/local/bin/piknik
 sudo chmod +x /usr/local/bin/piknik
 rm -rf piknik-linux_x86_64-0.10.2.tar.gz linux-x86_64
 
-# Required dependencies and X server setup
+# Required dependencies
 sudo apt-get update
 sudo apt-get install xclip -y
 sudo apt-get install xvfb -y
 sudo apt-get install inotify-tools -y
+```
+
+## Piknik Server Setup on Devcontainer
+
+### Create the Server Script
+
+Create a file named `run_piknik_server.sh` in your devcontainer workspace with this content:
+
+```bash
+#!/bin/bash
 
 # Virtual framebuffer setup
 sudo Xvfb :99 -screen 0 1024x768x16 &
+XVFB_PID=$!  # Capture the PID of the Xvfb process
 
 # DISPLAY environment setup
 if ! grep -q "export DISPLAY=:99" ~/.bashrc; then
     echo "export DISPLAY=:99" >> ~/.bashrc
 fi
 export DISPLAY=:99
-```
 
-These commands are typically included in a standard development container setup, particularly if you're using tools like aider that require clipboard access. If any are missing, add them to your existing postCreate.sh script.
+# Check and set permissions for .piknik.toml in current directory
+if [ -f ./.piknik.toml ]; then
+    chmod 600 ./.piknik.toml
+else
+    echo "Warning: .piknik.toml not found in current directory. Make sure to create it before running the server."
+    exit 1
+fi
 
-## Manual Installation on the Devcontainer
-
-### 1. Download and Install Piknik
-
-Run the following commands in your devcontainer terminal:
-
-```bash
-wget https://github.com/jedisct1/piknik/releases/download/0.10.2/piknik-linux_x86_64-0.10.2.tar.gz
-tar xzf piknik-linux_x86_64-0.10.2.tar.gz
-sudo mv linux-x86_64/piknik /usr/local/bin/piknik
-sudo chmod +x /usr/local/bin/piknik
-rm -rf piknik-linux_x86_64-0.10.2.tar.gz linux-x86_64
-```
-
-### 2. Install Dependencies
-
-```bash
-sudo apt-get update
-sudo apt-get install xclip -y
-sudo apt-get install xvfb -y
-sudo apt-get install inotify-tools -y
-```
-
-### 3. Start a Virtual Framebuffer
-
-```bash
-sudo Xvfb :99 -screen 0 1024x768x16
-export DISPLAY=:99
-```
-
-### 4. Create and Run the Combined Server and Clipboard Sender
-
-Create a file named `run_piknik_server.sh` with the following content:
-
-```bash
-#!/bin/bash
-export DISPLAY=:99
+# Flag to ensure cleanup runs only once
+CLEANUP_DONE=false
 
 # Function to cleanup background processes on script exit
 cleanup() {
-    echo "Stopping Piknik server and clipboard sender..."
-    pkill -P $  # Kill all child processes
+    if [ "$CLEANUP_DONE" = true ]; then
+        exit 0  # Exit if cleanup has already been performed
+    fi
+    CLEANUP_DONE=true
+    echo "Stopping Piknik server, clipboard sender, and Xvfb..."
+    if ps -p $XVFB_PID > /dev/null 2>&1; then
+        kill $XVFB_PID  # Terminate Xvfb if still running
+    else
+        echo "Xvfb process already terminated."
+    fi
+    pkill -P $$  # Kill child processes started by this script
     exit 0
 }
 
 # Set up trap to catch script termination
-trap cleanup SIGINT SIGTERM
+trap cleanup SIGINT SIGTERM EXIT
 
-# Start Piknik server in background with output
+# Start Piknik server in background with output using current directory config
 echo "Starting Piknik server..."
-piknik -server > >(while read line; do echo "[Server] $line"; done) 2>&1 &
+piknik -config ./.piknik.toml -server > >(while read line; do echo "[Server] $line"; done) 2>&1 &
 
+# Start clipboard sender
 echo "Starting clipboard sender..."
 # Previous clipboard content
 LAST_CLIPBOARD=""
@@ -115,7 +106,9 @@ while true; do
     # Check if the clipboard content has changed
     if [[ "$CLIPBOARD" != "$LAST_CLIPBOARD" ]]; then
         echo "[Sender] Copying new content to Piknik"
-        echo "$CLIPBOARD" | piknik -copy
+        # Add the clipboard content followed by the instruction line
+        MODIFIED_CONTENT="$CLIPBOARD"$'\nReply with a single code block surrounded by triple backticks and using the language identifier "txt". The content inside this code block should be written in markdown format, but any code blocks within the markdown should use <code_block> and </code_block> tags instead of triple backticks.\n\n'
+        echo "$MODIFIED_CONTENT" | piknik -config ./.piknik.toml -copy
         LAST_CLIPBOARD="$CLIPBOARD"
     fi
     
@@ -130,19 +123,6 @@ Make it executable:
 chmod +x run_piknik_server.sh
 ```
 
-Run it in a dedicated terminal tab/window:
-
-```bash
-./run_piknik_server.sh
-```
-
-The script will now run both the Piknik server and clipboard sender in the same terminal with labeled output. You can:
-- See server activity with "[Server]" prefix
-- See clipboard sender activity with "[Sender]" prefix
-- Stop both processes at once with Ctrl+C
-
-Pro tip: Run this in a dedicated VS Code terminal tab to keep it visible and easily manageable.
-
 ## Setting Up Piknik on Your Mac
 
 ### 1. Install Piknik
@@ -151,7 +131,7 @@ Download Piknik for macOS from the [Piknik Releases page](https://github.com/jed
 
 ### 2. Create the Clipboard Receiver Script
 
-Create a file named `clipboard_receiver.sh` with the following content:
+Create a file named `clipboard_receiver.sh` with this content:
 
 ```bash
 #!/bin/bash
@@ -190,54 +170,49 @@ Make it executable:
 chmod +x clipboard_receiver.sh
 ```
 
-Run it in a dedicated terminal window:
+## Configuration
 
-```bash
-./clipboard_receiver.sh
-```
+### Key Generation and Configuration
 
-The script will now run in the foreground and show its activity. You can:
-- See when new clipboard content is received
-- Stop it at any time with Ctrl+C
-- Keep track of its status in the terminal window
-
-Pro tip: Keep this terminal window visible (but minimized if you prefer) so you always know when the clipboard sync is active.
-
-## Configuration for Piknik
-
-### 1. Generate Keys
-
-On the devcontainer, generate keys using:
+1. Generate keys using the `piknik -genkeys` command on either the Mac or devcontainer:
 
 ```bash
 piknik -genkeys
 ```
 
-Use the output to configure `.piknik.toml`.
-
-### 2. Example Configuration File on Mac
-
-Create a `.piknik.toml` file with the following content:
+2. Create a `.piknik.toml` file in both your devcontainer workspace and Mac with this structure:
 
 ```toml
 Listen = "localhost:8075"
-Psk    = "xxx"
-SignPk = "xxx"
-SignSk = "xxx"
-EncryptSk = "xxx"
+Psk    = "[your_generated_key]"
+SignPk = "[your_generated_key]"
+SignSk = "[your_generated_key]"
+EncryptSk = "[your_generated_key]"
 ```
 
-Note: Replace the keys with your own generated keys.
+Important notes:
+- Use the same keys on both Mac and devcontainer
+- Place the `.piknik.toml` file directly in your workspace, not in a `.piknik` folder
+- The keys shown above are placeholders - use your actual generated keys
 
-### 3. Forward Required Ports in Devcontainer
+### Port Forwarding
 
-Add the following to your `.devcontainer.json`:
+Add to your `.devcontainer.json`:
 
 ```json
-"forwardPorts": [4040, 8075]
+"forwardPorts": [8075]
 ```
 
-## Notes
+## Usage
 
-- This guide assumes the Piknik server runs on the devcontainer. Adjust as needed for your setup.
-- Clipboard synchronization is one-way: from the devcontainer to the Mac. Copy-pasting on the Mac works as usual without affecting the devcontainer clipboard.
+1. In the devcontainer:
+   ```bash
+   ./run_piknik_server.sh
+   ```
+
+2. On your Mac:
+   ```bash
+   ./clipboard_receiver.sh
+   ```
+
+The clipboard content will now sync from your devcontainer to your Mac automatically.
