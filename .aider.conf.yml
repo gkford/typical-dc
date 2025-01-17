@@ -14,6 +14,9 @@
 ## Specify the Anthropic API key
 #anthropic-api-key: THIS FILE IS PUBLIC - DO NOT INCLUDE API KEYS. USE `.env.local` INSTEAD
 
+## Use deepseek/deepseek-chat model for the main chat
+deepseek: true
+
 ## Specify the model to use for the main chat
 #model:
 
@@ -66,7 +69,7 @@
 #verify-ssl: true
 
 ## Specify what edit format the LLM should use (default depends on model)
-#edit-format:
+edit-format: diff
 
 ## Specify the model to use for commit messages and chat history summarization (default depends on --model)
 #weak-model:
@@ -235,3 +238,6 @@ env-file: .env.local
 
 ## Run aider in your browser
 #gui: false
+
+## Enable automatic copy/paste of chat between aider and web UI (default: False)
+copy-paste: true

@@ -1,6 +1,5 @@
 *.aider
-.env.local
 *.local
 node_modules
-!.env.local.template
-!.env.template
+.env.local.template
+.env.local
