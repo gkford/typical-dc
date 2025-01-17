@@ -220,11 +220,11 @@ Use the output to configure `.piknik.toml`.
 Create a `.piknik.toml` file with the following content:
 
 ```toml
-Listen = "0.0.0.0:8075"
-Psk    = "908533336bef6aa6097bd075983fcd8178b648f300d578831e16bbd5a00c4b97"
-SignPk = "cd98f2b5a2d3278b597f7d7c05e4bbf290098f72a620573397b89489c36915b6"
-SignSk = "341a5d7c151f2611357b31224a5cab40bc23f53248f80db3822f0f89206b2f30"
-EncryptSk = "8e98fd6b4f5cf09f3812f96ff6034c726992eec82e99d110cc98a369d333e91c"
+Listen = "localhost:8075"
+Psk    = "xxx"
+SignPk = "xxx"
+SignSk = "xxx"
+EncryptSk = "xxx"
 ```
 
 Note: Replace the keys with your own generated keys.

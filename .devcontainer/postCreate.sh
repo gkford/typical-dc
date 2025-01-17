@@ -21,6 +21,8 @@ done
 echo "Installing Python dependencies..."
 pip install --upgrade pip
 # pip install -r requirements.txt
+python -m pip install aider-install
+aider-install
 
 # Perform an editable install if applicable
 if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
@@ -38,8 +40,8 @@ rm -rf piknik-linux_x86_64-0.10.2.tar.gz linux-x86_64
 sudo apt-get update
 sudo apt-get install xclip -y
 sudo apt-get install xvfb -y
-sudo apt-get install inotify-tools -y
-sudo Xvfb :99 -screen 0 1024x768x16
+# sudo apt-get install inotify-tools -y
+# sudo Xvfb :99 -screen 0 1024x768x16
 export DISPLAY=:99
 
 
