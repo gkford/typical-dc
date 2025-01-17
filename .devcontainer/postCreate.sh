@@ -20,7 +20,7 @@ done
 # Install Python dependencies
 echo "Installing Python dependencies..."
 pip install --upgrade pip
-pip install -r requirements.txt
+# pip install -r requirements.txt
 
 # Perform an editable install if applicable
 if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then

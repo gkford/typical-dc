@@ -156,15 +156,23 @@ Create a file named `clipboard_receiver.sh` with the following content:
 ```bash
 #!/bin/bash
 
+# Trap Ctrl+C (SIGINT) to exit cleanly
+trap 'echo -e "\nStopping clipboard receiver..."; exit 0' SIGINT
+
+echo "Starting clipboard receiver..."
+echo "Press Ctrl+C to stop"
+echo "------------------------"
+
 # Store the last clipboard content retrieved from Piknik
 LAST_PIKNIK_CLIPBOARD=""
 
 while true; do
     # Get the clipboard content from Piknik
-    NEW_CLIPBOARD=$(piknik -paste)
+    NEW_CLIPBOARD=$(piknik -paste 2>/dev/null)  # Suppress error messages
     
     # Check if the Piknik clipboard has changed
     if [[ "$NEW_CLIPBOARD" != "$LAST_PIKNIK_CLIPBOARD" && ! -z "$NEW_CLIPBOARD" ]]; then
+        echo "New clipboard content received!"
         # Update the Mac's clipboard
         echo "$NEW_CLIPBOARD" | pbcopy
         # Update the local variable to track the last clipboard content
