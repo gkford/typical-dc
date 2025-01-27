@@ -1,8 +1,10 @@
 {
-  "name": "Ubuntu Jammy with Python, aider, piknik",
+  "name": "Ubuntu Jammy with Python, node, aider, piknik",
   "image": "mcr.microsoft.com/devcontainers/base:jammy",
   "features": {
-    "ghcr.io/devcontainers/features/python:1": {}
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
   },
   "postCreateCommand": "chmod +x .devcontainer/postCreate.sh && .devcontainer/postCreate.sh",
   "customizations": {
